@@ -128,19 +128,21 @@ export default class GameController {
   onCellClick(index) {
 
     if(this.gameState.endGame) return;
+    
+    this.allPositions.forEach((el) => this.gamePlay.deselectCell(el))
 
     const playersCharType = ['bowman', 'swordsman', 'magician'];
     const [char] = this.redDrawPositionsArr.filter((el) => el.position === index);
 
-    const allPositionsToMove = getAllPositionsToMove(this.gameState.character?.type, this.gameState.positionedCharacters, 'move');
-    const allPositionsToAttack = getAllPositionsToMove(this.gameState.character?.type, this.gameState.positionedCharacters, 'attack');
+    const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
+    const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
 
     if(char) {
-      this.gamePlay.cells.forEach((elem) => elem.classList.remove('selected'));
       const [playerChar] = playersCharType.filter((el) => el === char.character.type);
+      this.updatePosition ();
       if (playerChar) {
-        this.gamePlay.selectCell(index, 'yellow');
         this.gameState = GameState.from({...this.gameState, positionedCharacters: index, character: char.character});
+        this.gamePlay.selectCell(index, 'yellow');
       }
     } 
      if(allPositionsToMove.includes(index) && !this.enemyPosition.includes(index)) {
@@ -151,10 +153,10 @@ export default class GameController {
         this.updatePosition ();
       }
       this.gamePlay.redrawPositions(this.redDrawPositionsArr);
-      this.gamePlay.deselectCell(this.gameState.positionedCharacters); 
       this.computerAtack();
+    }
 
-    }else if (allPositionsToAttack.includes(index) && this.enemyPosition.includes(index)) {
+    if (allPositionsToAttack.includes(index) && this.enemyPosition.includes(index)) {
 
       const findElement = this.redDrawPositionsArr.find(el => el.position === index)
       if (this.gameState.player) {
@@ -172,8 +174,8 @@ export default class GameController {
 
     if(this.gameState.endGame) return;
 
-     const allPositionsToMove = getAllPositionsToMove(this.gameState.character?.type, this.gameState.positionedCharacters, 'move');
-     const allPositionsToAttack = getAllPositionsToMove(this.gameState.character?.type, this.gameState.positionedCharacters, 'attack');
+     const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
+     const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
 
     const [char] = this.redDrawPositionsArr.filter((el) => el.position === index)
 
@@ -200,11 +202,14 @@ export default class GameController {
   onCellLeave(index) {
     this.gamePlay.hideCellTooltip(index)
     this.gamePlay.setCursor(cursors.auto)
-    this.gamePlay.cells.forEach((elem) => elem.classList.remove('selected-red'));
-    this.gamePlay.cells.forEach((elem) => elem.classList.remove('selected-green'));
+    if (index === this.gameState.positionedCharacters) {
+      return;
+    }
+    this.gamePlay.deselectCell(index)
   }
 
   async attack(attacker, target, index) {
+    
     if (!target) {
       return;
     }
@@ -236,7 +241,7 @@ export default class GameController {
             this.updatePosition();
             if(this.gameState.level > 3) {
               this.gameState = GameState.from({...this.gameState, endGame: true});
-              GamePlay.showMessage('Поздравляем вы прошли игру, начните новую нажав кнопку New game')
+              GamePlay.showMessage('Поздравляем вы прошли игру, начните новую игру нажав кнопку New game')
             }
             this.generateNewEnemyTeam ();
             this.drowBoard ();
@@ -244,7 +249,7 @@ export default class GameController {
             this.updatePosition ();
           } else if(this.playerPosition.length === 0) {
             this.gameState = GameState.from({...this.gameState, endGame: true});
-            GamePlay.showMessage('Вас победил компьютер, бывает, начните новую нажав кнопку New game')
+            GamePlay.showMessage('Вас победил компьютер, бывает, начните новую игру нажав кнопку New game')
           }
           await  this.gamePlay.redrawPositions(this.redDrawPositionsArr);
           this.computerAtack();
@@ -285,8 +290,8 @@ export default class GameController {
     const playerTeam = this.redDrawPositionsArr.filter((el) => el.character.type === 'bowman' || el.character.type === 'swordsman' || el.character.type === 'magician');
     enemyTeam.forEach((el) => {
 
-      const allPositionsToAttack = getAllPositionsToMove(el.character?.type, el.position, 'attack');
-      const allPositionsToMove = getAllPositionsToMove(el.character?.type, el.position, 'move');
+      const allPositionsToAttack = getAllPositionsToMove(el.character, el.position, 'attack');
+      const allPositionsToMove = getAllPositionsToMove(el.character, el.position, 'move');
       playerTeam.forEach((pos) => {
 
         if(!this.gameState.player) {
@@ -316,9 +321,19 @@ export default class GameController {
     const availablePositions = arr.filter(pos => !positions.includes(pos));
     if (availablePositions.length === 0) return null;
 
-    let closest = availablePositions[0];
+    const boardSize = 8;
+    const isPlayerOnLeft = number % boardSize < boardSize / 2;
+
+    const filteredPositions = availablePositions.filter(pos => {
+    const posCol = pos % boardSize;
+    return isPlayerOnLeft ? posCol < boardSize / 2 : posCol >= boardSize / 2;
+  });
+
+  const positionsToCheck = filteredPositions.length > 0 ? filteredPositions : availablePositions;
+
+    let closest = positionsToCheck[0];
     let dif = Math.abs(number - closest);
-    availablePositions.forEach((el) => {
+    positionsToCheck.forEach((el) => {
       const currentDif =  Math.abs(number - el);
        if(currentDif < dif) {
         dif = currentDif;

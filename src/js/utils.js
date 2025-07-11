@@ -70,21 +70,9 @@ export function getAllPositionsToMove(gameStateType, positionedCharacters, type)
   let bottom = positionedCharacters;
 
   if(type === 'move') {
-    if (gameStateType === 'bowman' || gameStateType === 'vampire') {
-      moveDistance = 2;
-    } else if (gameStateType === 'swordsman' || gameStateType === 'undead') {
-      moveDistance = 4;
-    } else if (gameStateType === 'magician' || gameStateType === 'daemon') {
-      moveDistance = 1;
-    }
+    moveDistance = gameStateType?.moveDistance
   } else if (type === 'attack') {
-    if (gameStateType === 'bowman' || gameStateType === 'vampire') {
-      moveDistance = 2;
-    } else if (gameStateType === 'swordsman' || gameStateType === 'undead') {
-      moveDistance = 1;
-    } else if (gameStateType === 'magician' || gameStateType === 'daemon') {
-      moveDistance = 4;
-    }
+    moveDistance = gameStateType?.attackDistance
   }
 
   for (let i = 0; i < moveDistance; i++) {

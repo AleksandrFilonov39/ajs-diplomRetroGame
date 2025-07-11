@@ -12,14 +12,10 @@ export default class GameState {
 
   static from(object) {
     const gameState = new GameState();
-    gameState.currentTurn = object.currentTurn;
-    gameState.positionedCharacters = object.positionedCharacters;
-    gameState.character = object.character;
-    gameState.player = object.player;
-    gameState.level = object.level;
-    gameState.endGame = object.endGame;
-    gameState.score = object.score;
-    gameState.redDrawPositionsArr = object.redDrawPositionsArr;
+
+    for(let key in object) {
+      gameState[key] = object[key]
+    }
     return gameState;
   }
 }

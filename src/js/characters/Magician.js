@@ -9,5 +9,8 @@ export default class Magician extends Character {
     this.defence = 40;
     this.health = 50;
     this.type = type;
+    
+    this.moveDistance = 1;
+    this.attackDistance = 4;
     }
 }
