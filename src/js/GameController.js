@@ -128,6 +128,10 @@ export default class GameController {
   onCellClick(index) {
 
     if(this.gameState.endGame) return;
+
+    // if (!this.gameState.character) {
+    //   return; // или выполнить другую логику
+    // }
     
     this.allPositions.forEach((el) => this.gamePlay.deselectCell(el))
 
@@ -173,6 +177,9 @@ export default class GameController {
   onCellEnter(index) {
 
     if(this.gameState.endGame) return;
+    // if (!this.gameState.character) {
+    //   return; // или выполнить другую логику
+    // }
 
      const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
      const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
@@ -375,3 +382,5 @@ export default class GameController {
   }
 
 }
+
+

@@ -57,6 +57,9 @@ export function calcHealthLevel(health) {
 }
 
 export function getAllPositionsToMove(gameStateType, positionedCharacters, type) {
+  
+  if (!gameStateType || positionedCharacters === undefined || type === null) return [];
+
   const boardSize = 8;
   const allPositionsToMove = [];
   let moveDistance = 0; 
