@@ -57,8 +57,8 @@ export function calcHealthLevel(health) {
 }
 
 export function getAllPositionsToMove(gameStateType, positionedCharacters, type) {
-  
-  if (!gameStateType || positionedCharacters === undefined || type === null) return [];
+
+  if (!gameStateType || positionedCharacters === undefined || type === null) return;
 
   const boardSize = 8;
   const allPositionsToMove = [];
@@ -73,9 +73,9 @@ export function getAllPositionsToMove(gameStateType, positionedCharacters, type)
   let bottom = positionedCharacters;
 
   if(type === 'move') {
-    moveDistance = gameStateType?.moveDistance
+    moveDistance = gameStateType.moveDistance
   } else if (type === 'attack') {
-    moveDistance = gameStateType?.attackDistance
+    moveDistance = gameStateType.attackDistance
   }
 
   for (let i = 0; i < moveDistance; i++) {
@@ -130,6 +130,34 @@ export function getAllPositionsToMove(gameStateType, positionedCharacters, type)
  
   return allPositionsToMove;
 }
+
+export function findClosestNumber (arr, number, positions) {
+    if (arr.length === 0) return null;
+
+    const availablePositions = arr.filter(pos => !positions.includes(pos));
+    if (availablePositions.length === 0) return null;
+
+    const boardSize = 8;
+    const isPlayerOnLeft = number % boardSize < boardSize / 2;
+
+    const filteredPositions = availablePositions.filter(pos => {
+    const posCol = pos % boardSize;
+    return isPlayerOnLeft ? posCol < boardSize / 2 : posCol >= boardSize / 2;
+  });
+
+  const positionsToCheck = filteredPositions.length > 0 ? filteredPositions : availablePositions;
+
+    let closest = positionsToCheck[0];
+    let dif = Math.abs(number - closest);
+    positionsToCheck.forEach((el) => {
+      const currentDif =  Math.abs(number - el);
+       if(currentDif < dif) {
+        dif = currentDif;
+          closest = el;
+      }
+    })
+    return closest;
+  }
 
 
 

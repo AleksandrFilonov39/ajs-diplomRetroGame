@@ -9,8 +9,9 @@ import Vampire from './characters/Vampire.js';
 import { generateTeam } from './generators.js';
 import GameState from './GameState.js';
 import cursors from './cursors.js';
-import { getAllPositionsToMove } from './utils.js'; 
+import { getAllPositionsToMove, findClosestNumber } from './utils.js'; 
 import GamePlay from './GamePlay.js';
+import Team from './Team.js';
 
 
 export default class GameController {
@@ -25,6 +26,7 @@ export default class GameController {
     this.redDrawPositionsArr = [];
     this.gameState = new GameState();
     this.theme;
+    this.team = new Team ();
 
     this.onCellEnter = this.onCellEnter.bind(this);
     this.onCellLeave = this.onCellLeave.bind(this);
@@ -128,18 +130,11 @@ export default class GameController {
   onCellClick(index) {
 
     if(this.gameState.endGame) return;
-
-    // if (!this.gameState.character) {
-    //   return; // или выполнить другую логику
-    // }
     
     this.allPositions.forEach((el) => this.gamePlay.deselectCell(el))
 
     const playersCharType = ['bowman', 'swordsman', 'magician'];
     const [char] = this.redDrawPositionsArr.filter((el) => el.position === index);
-
-    const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
-    const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
 
     if(char) {
       const [playerChar] = playersCharType.filter((el) => el === char.character.type);
@@ -149,6 +144,10 @@ export default class GameController {
         this.gamePlay.selectCell(index, 'yellow');
       }
     } 
+
+    const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
+    const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
+
      if(allPositionsToMove.includes(index) && !this.enemyPosition.includes(index)) {
       const findElement = this.redDrawPositionsArr.find(el => el.position === this.gameState.positionedCharacters)
       if(findElement && !this.allPositions.includes(index)) {
@@ -177,12 +176,6 @@ export default class GameController {
   onCellEnter(index) {
 
     if(this.gameState.endGame) return;
-    // if (!this.gameState.character) {
-    //   return; // или выполнить другую логику
-    // }
-
-     const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
-     const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
 
     const [char] = this.redDrawPositionsArr.filter((el) => el.position === index)
 
@@ -192,6 +185,13 @@ export default class GameController {
         this.gamePlay.setCursor(cursors.pointer)
       }
     }   
+
+    if (!this.gameState.character) {
+      return; 
+    }
+
+     const allPositionsToMove = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'move');
+     const allPositionsToAttack = getAllPositionsToMove(this.gameState.character, this.gameState.positionedCharacters, 'attack');
     
     if(allPositionsToMove.includes(index)) {
       this.gamePlay.setCursor(cursors.pointer);
@@ -236,7 +236,7 @@ export default class GameController {
           this.redDrawPositionsArr = this.redDrawPositionsArr.filter((el) => el.character.health > 0)
           this.updatePosition ();
             if(this.enemyPosition.length === 0) {
-              this.levelUp(this.redDrawPositionsArr)
+              this.team.levelUp(this.redDrawPositionsArr)
               if(this.redDrawPositionsArr.length === 1) {
                 this.addOneUnitForPlayer ()
               }
@@ -268,15 +268,6 @@ export default class GameController {
    addOneUnitForPlayer () {
     const userTeam = generateTeam(this.playersType, 2, 1);
     this.redDrawPositionsArr = [...this.redDrawPositionsArr, ...this.PositionedCharStart(userTeam, [0])]
-  }
-
-  levelUp (arr) {
-   return arr.forEach((char) => {
-        char.character.level = (char.character.level + 1);
-        char.character.attack = Math.max(char.character.attack, char.character.attack * (80 + char.character.health) / 100);
-        char.character.defence = Math.max(char.character.defence, char.character.defence * (80 + char.character.health) / 100);
-        char.character.health = (char.character.health + 80) > 100? 100 : char.character.health + 80;
-      })
   }
 
   updatePosition () {
@@ -313,41 +304,13 @@ export default class GameController {
 
               const enemy = this.redDrawPositionsArr.find((enemyPos) => enemyPos.position === el.position);
               this.updatePosition ()
-              enemy.position = this.findClosestNumber (allPositionsToMove, closestPlayerTeammate.position, this.allPositions)
+              enemy.position = findClosestNumber (allPositionsToMove, closestPlayerTeammate.position, this.allPositions)
               this.gamePlay.redrawPositions(this.redDrawPositionsArr);
               this.gameState = GameState.from({...this.gameState, player: true});
             }
         }
       })
     })
-  }
-
-  findClosestNumber (arr, number, positions) {
-    if (arr.length === 0) return null;
-
-    const availablePositions = arr.filter(pos => !positions.includes(pos));
-    if (availablePositions.length === 0) return null;
-
-    const boardSize = 8;
-    const isPlayerOnLeft = number % boardSize < boardSize / 2;
-
-    const filteredPositions = availablePositions.filter(pos => {
-    const posCol = pos % boardSize;
-    return isPlayerOnLeft ? posCol < boardSize / 2 : posCol >= boardSize / 2;
-  });
-
-  const positionsToCheck = filteredPositions.length > 0 ? filteredPositions : availablePositions;
-
-    let closest = positionsToCheck[0];
-    let dif = Math.abs(number - closest);
-    positionsToCheck.forEach((el) => {
-      const currentDif =  Math.abs(number - el);
-       if(currentDif < dif) {
-        dif = currentDif;
-          closest = el;
-      }
-    })
-    return closest;
   }
 
   drowBoard () {
